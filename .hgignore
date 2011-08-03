@@ -1,0 +1,12 @@
+syntax: glob
+
+ploufseo.egg-info/*
+build/*
+dist/*
+pwilang.egg*
+.*.swp
+*.swp
+*.pyc
+*.sqlite3
+*.pyc
+tests

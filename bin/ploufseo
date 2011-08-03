@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+import csv
+import os
+import sys
+import socket
+import mmap
+import string
+from lxml import etree
+from lxml.html.soupparser import fromstring
+from optparse import OptionParser
+from urllib2 import urlopen
+from progressbar import ProgressBar, Bar, Percentage, RotatingMarker, ETA
+
+from ploufseo.http import HTTPRequest
+from ploufseo.unicodecsv import UnicodeWriter
+from ploufseo.mapcount import wc_lines
+
+
+status_header = ['Status code','Redirection URL','Status code','Redirection URL']
+
+def check_status(request):
+    if request.status == 301 or request.status == 302:
+        subrequest = HTTPRequest(request.location)
+        subrequest.get_headers()
+        return [str(request.status), request.comment, str(subrequest.status), subrequest.comment]
+    else :
+        return [str(request.status), request.comment, '', '']
+
+def check_xpath(request, xpath_expression):
+    root = fromstring(request.HTML)
+    res = []
+    for xpath in xpath_expression:
+        try:
+            value = root.xpath(xpath)
+            if value:
+                res.append(value[0])
+            else:
+                res.append('')
+        except etree.XPathEvalError:
+            res.append('ERROR')
+            print xpath, ' is not a valid expression'
+    return res
+
+
+def make_headers(options):
+    headers = ['URL']
+    if options.status_code:
+        headers.extend(status_header)
+    if options.xpath_expression:
+        headers.extend(string.split(options.xpath_expression, ','))
+
+    return headers
+
+widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
+
+def run(f,options):
+    csv_file = open(f,'rU')
+    url_reader = csv.reader(csv_file)
+
+    csv_length = wc_lines(f)
+
+    if options.xpath_expression:
+        xpath_expression = string.split(options.xpath_expression, ',')
+
+    output = [make_headers(options)]
+    progress = ProgressBar(widgets=widgets,maxval=csv_length).start()
+    count = 0
+    for url in url_reader:
+        if len(url) >= 1:
+            request = HTTPRequest(url[0].strip())
+            current_line = [request.url]
+            if request.url != "URL":
+                if options.status_code: 
+                    request.get_headers()
+                    current_line.extend(check_status(request))
+                if options.xpath_expression:
+                    request.get_content()
+                    current_line.extend(check_xpath(request,xpath_expression))
+
+                output.append(current_line)
+
+        count += 1
+        progress.update(count)
+
+    progress.finish()
+
+    csv_file.close()
+
+    if options.overwrite:
+        output_file = open(f,'w')
+    else:
+        output_file = sys.stdout
+        
+
+    url_writer = UnicodeWriter(output_file)
+    url_writer.writerows(output)
+
+def main():
+    usage = """
+Usage: %prog [options] FILES
+
+FILES shoud be one or many CSV files containing valid URLs on the first row
+"""
+    parser = OptionParser()
+    parser.add_option ("-S","--check-status",help="Check the returned status code.", action="store_true", dest="status_code", default=False )
+    parser.add_option ("-X","--check-xpath", help="Check the XPath expressions, they must be passed as XPATH1,XPATH2,...", dest="xpath_expression", metavar="XPATH", default=False)
+    parser.add_option ("-o","--overwrite", help="Overwrite the given csv file", action="store_true", dest="overwrite", default=False)
+    (options, args) = parser.parse_args()
+    filelist = args
+    for f in filelist:
+        if os.path.isfile(f):
+            run(f,options)
+
+
+if __name__ == "__main__":
+    main()
