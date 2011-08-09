@@ -6,7 +6,7 @@ def read(fname):
 
 setup (
     name='ploufseo',
-    version='0.2',
+    version='0.3',
     description='A command-line tool to get some informations about websites',
     author='Felix Delval',
     author_email='felixdelval@gmail.com',

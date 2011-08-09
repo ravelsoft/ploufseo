@@ -3,19 +3,15 @@
 import csv
 import os
 import sys
-import socket
-import mmap
 import string
-from lxml import etree
 from lxml.html.soupparser import fromstring
 from optparse import OptionParser
-from urllib2 import urlopen
 from progressbar import ProgressBar, Bar, Percentage, RotatingMarker, ETA
 
+from ploufseo.sitemap import URLList
 from ploufseo.http import HTTPRequest
 from ploufseo.unicodecsv import UnicodeWriter
 from ploufseo.mapcount import wc_lines
-
 
 status_header = ['Status code','Redirection URL','Status code','Redirection URL']
 
@@ -54,21 +50,25 @@ def make_headers(options):
 
 widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
 
-def run(f,options):
-    csv_file = open(f,'rU')
-    url_reader = csv.reader(csv_file)
+def run(options):
 
-    csv_length = wc_lines(f)
+    url_list = URLList()
+
+    if options.csv:
+        url_list.load_from_csv(options.csv)
+    elif options.sitemap:
+        url_list.load_from_sitemap(options.sitemap)
 
     if options.xpath_expression:
         xpath_expression = string.split(options.xpath_expression, ',')
 
     output = [make_headers(options)]
-    progress = ProgressBar(widgets=widgets,maxval=csv_length).start()
+    if options.progress:
+        progress = ProgressBar(widgets=widgets,maxval=len(url_list.urls)).start()
     count = 0
-    for url in url_reader:
+    for url in url_list.urls:
         if len(url) >= 1:
-            request = HTTPRequest(url[0].strip())
+            request = HTTPRequest(url.strip())
             current_line = [request.url]
             if request.url != "URL":
                 if options.status_code: 
@@ -81,14 +81,14 @@ def run(f,options):
                 output.append(current_line)
 
         count += 1
-        progress.update(count)
+        if options.progress:
+            progress.update(count)
 
-    progress.finish()
-
-    csv_file.close()
+    if options.progress:
+        progress.finish()
 
     if options.overwrite:
-        output_file = open(f,'w')
+        output_file = open(option.csv,'w')
     else:
         output_file = sys.stdout
         
@@ -103,15 +103,61 @@ Usage: %prog [options] FILES
 FILES shoud be one or many CSV files containing valid URLs on the first row
 """
     parser = OptionParser()
-    parser.add_option ("-S","--check-status",help="Check the returned status code.", action="store_true", dest="status_code", default=False )
-    parser.add_option ("-X","--check-xpath", help="Check the XPath expressions, they must be passed as XPATH1,XPATH2,...", dest="xpath_expression", metavar="XPATH", default=False)
-    parser.add_option ("-o","--overwrite", help="Overwrite the given csv file", action="store_true", dest="overwrite", default=False)
-    (options, args) = parser.parse_args()
-    filelist = args
-    for f in filelist:
-        if os.path.isfile(f):
-            run(f,options)
+    
+    parser.add_option(
+        "-s","--sitemap",
+        help = 'Get the links from the sitemap.', 
+        dest = "sitemap",
+        metavar = "SITEMAP-URL",
+        default = False
+    )
+    
+    parser.add_option(
+        "-c","--csv",
+        help = 'Get the links form csv files.',
+        dest = "csv",
+        metavar = "CSV-FILES",
+        default = False
+    )
+    
+    parser.add_option(
+        "-S", "--check-status",
+        help="Check the returned status code.",
+        action="store_true", 
+        dest="status_code", default=False
+    )
+    
+    parser.add_option(
+        "-X", "--check-xpath",
+        help = "Check the XPath expressions, they must be passed as XPATH1,XPATH2,...",
+        dest = "xpath_expression",
+        metavar="XPATH",
+        default=False
+    )
+    
+    parser.add_option (
+        "-o","--overwrite",
+        help="Overwrite the given csv file",
+        action="store_true",
+        dest="overwrite",
+        default=False
+    )
 
+    parser.add_option (
+        '-p', '--progress',
+        help="Show progress bar",
+        action="store_true",
+        dest="progress",
+        default=False
+    )
+
+    (options, args) = parser.parse_args()
+    
+    if not (bool(options.csv) != bool(options.sitemap)):
+        print '--sitemap OR --csv must given'
+        sys.exit()
+
+    run(options)
 
 if __name__ == "__main__":
     main()
