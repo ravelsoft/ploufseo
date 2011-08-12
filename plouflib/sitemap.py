@@ -1,4 +1,6 @@
 import csv
+import sys
+import string
 from urllib2 import urlopen
 from lxml.html.soupparser import fromstring
 
@@ -15,9 +17,18 @@ class URLList:
         csv_file.close()
 
     def load_from_sitemap(self, url):
-        res = urlopen(url)
+        try:
+            res = urlopen(url)
+        except ValueError:
+            print 'Sitemap URL is not valid'
+            sys.exit()
         content = fromstring(res.read())
         self.urls = content.xpath('//loc/text()')
+
+
+    def load_from_urls(self, urls):
+        print urls
+        self.urls = string.split(urls,',')
 
 
 

@@ -1,7 +1,7 @@
 import httplib
 import socket
+import urllib2
 from urlparse import urlparse
-from urllib2 import urlopen
 from datetime import datetime
 
 class HTTPRequest:
@@ -11,6 +11,8 @@ class HTTPRequest:
         self.HTML = ''
         self.status_code = 0
         self.fetched = None
+        self.opener = urllib2.build_opener()
+        self.opener.addheaders = [('User-agent','Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2b4) Gecko/20091124 Firefox/3.6b4 (.NET CLR 3.5.30729)')]
 
     def __parse_headers(self,res):
         output = {}
@@ -51,5 +53,8 @@ class HTTPRequest:
             print uri
 
     def get_content(self):
-        res = urlopen(self.url)
-        self.HTML = res.read()
+        try:
+            res = self.opener.open(self.url)
+            self.HTML = res.read()
+        except urllib2.HTTPError:
+            print 'Error'

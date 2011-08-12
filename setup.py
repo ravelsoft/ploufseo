@@ -11,7 +11,7 @@ setup (
     author='Felix Delval',
     author_email='felixdelval@gmail.com',
     license = 'GPLv3',
-    packages=['ploufseo'],
+    packages=['plouflib'],
     scripts=['bin/ploufseo'],
     long_description = read('README'),
     install_requires=['lxml','BeautifulSoup','progressbar'],

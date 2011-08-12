@@ -1,100 +1,22 @@
 #!/usr/bin/env python
 
-import csv
-import os
 import sys
-import string
-from lxml.html.soupparser import fromstring
 from optparse import OptionParser
 from progressbar import ProgressBar, Bar, Percentage, RotatingMarker, ETA
 
-from ploufseo.sitemap import URLList
-from ploufseo.http import HTTPRequest
-from ploufseo.unicodecsv import UnicodeWriter
-from ploufseo.mapcount import wc_lines
+from plouflib.ploufseo import PloufSeo
 
-status_header = ['Status code','Redirection URL','Status code','Redirection URL']
-
-def check_status(request):
-    if request.status == 301 or request.status == 302:
-        subrequest = HTTPRequest(request.location)
-        subrequest.get_headers()
-        return [str(request.status), request.comment, str(subrequest.status), subrequest.comment]
-    else :
-        return [str(request.status), request.comment, '', '']
-
-def check_xpath(request, xpath_expression):
-    root = fromstring(request.HTML)
-    res = []
-    for xpath in xpath_expression:
-        try:
-            value = root.xpath(xpath)
-            if value:
-                res.append(value[0])
-            else:
-                res.append('')
-        except etree.XPathEvalError:
-            res.append('ERROR')
-            print xpath, ' is not a valid expression'
-    return res
-
+widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
 
 def make_headers(options):
     headers = ['URL']
     if options.status_code:
-        headers.extend(status_header)
+        headers.extend(StatusCheck.header())
     if options.xpath_expression:
-        headers.extend(string.split(options.xpath_expression, ','))
+        headers.extend(StatusCheck.header())
 
     return headers
 
-widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
-
-def run(options):
-
-    url_list = URLList()
-
-    if options.csv:
-        url_list.load_from_csv(options.csv)
-    elif options.sitemap:
-        url_list.load_from_sitemap(options.sitemap)
-
-    if options.xpath_expression:
-        xpath_expression = string.split(options.xpath_expression, ',')
-
-    output = [make_headers(options)]
-    if options.progress:
-        progress = ProgressBar(widgets=widgets,maxval=len(url_list.urls)).start()
-    count = 0
-    for url in url_list.urls:
-        if len(url) >= 1:
-            request = HTTPRequest(url.strip())
-            current_line = [request.url]
-            if request.url != "URL":
-                if options.status_code: 
-                    request.get_headers()
-                    current_line.extend(check_status(request))
-                if options.xpath_expression:
-                    request.get_content()
-                    current_line.extend(check_xpath(request,xpath_expression))
-
-                output.append(current_line)
-
-        count += 1
-        if options.progress:
-            progress.update(count)
-
-    if options.progress:
-        progress.finish()
-
-    if options.overwrite:
-        output_file = open(option.csv,'w')
-    else:
-        output_file = sys.stdout
-        
-
-    url_writer = UnicodeWriter(output_file)
-    url_writer.writerows(output)
 
 def main():
     usage = """
@@ -119,6 +41,14 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         metavar = "CSV-FILES",
         default = False
     )
+
+    parser.add_option(
+        "-u","--url",
+        help = "Parse specific URLs",
+        dest = "url",
+        metavar = "URL-LIST",
+        default = False
+    )
     
     parser.add_option(
         "-S", "--check-status",
@@ -136,10 +66,10 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
     )
     
     parser.add_option (
-        "-o","--overwrite",
+        "-o","--output",
         help="Overwrite the given csv file",
-        action="store_true",
-        dest="overwrite",
+        dest="output",
+        metavar="FILENAME",
         default=False
     )
 
@@ -151,13 +81,22 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         default=False
     )
 
+    parser.add_option (
+        '-m', '--multiple',
+        help="Get all the matching value of an XPath expression instead of the first",
+        action="store_true",
+        dest="multiple",
+        default=False
+    )
+
     (options, args) = parser.parse_args()
     
-    if not (bool(options.csv) != bool(options.sitemap)):
-        print '--sitemap OR --csv must given'
-        sys.exit()
+    #if not (bool(options.csv) or bool(options.sitemap) or bool(options.url)):
+    #    print '--sitemap OR --csv must given'
+    #    sys.exit()
 
-    run(options)
+    plouf = PloufSeo(options)
+    plouf.run()
 
 if __name__ == "__main__":
     main()
