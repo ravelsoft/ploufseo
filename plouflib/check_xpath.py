@@ -29,7 +29,10 @@ class XpathCheck:
                     else:
                         res.append(value[0])
                 else:
-                    res.append('')
+                    if self.options.multiple:                
+                        res.append([''])
+                    else:
+                        res.append('')
             except etree.XPathEvalError:
                 res.append('ERROR')
         

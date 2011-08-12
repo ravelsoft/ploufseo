@@ -12,7 +12,7 @@ class HTTPRequest:
         self.status_code = 0
         self.fetched = None
         self.opener = urllib2.build_opener()
-        self.opener.addheaders = [('User-agent','Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2b4) Gecko/20091124 Firefox/3.6b4 (.NET CLR 3.5.30729)')]
+        self.opener.addheaders = [('User-agent','Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.0 Safari/534.13')]
 
     def __parse_headers(self,res):
         output = {}
@@ -53,8 +53,13 @@ class HTTPRequest:
             print uri
 
     def get_content(self):
-        try:
-            res = self.opener.open(self.url)
-            self.HTML = res.read()
-        except urllib2.HTTPError:
-            print 'Error'
+        if 'http://' in self.url:
+            try:
+                self.HTML = self.opener.open(self.url).read()
+            except urllib2.HTTPError:
+                print 'Error'
+        else:
+            try:
+                self.HTML = open(self.url).read()
+            except IOError:
+                print 'File does not exist'

@@ -49,7 +49,7 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         metavar = "URL-LIST",
         default = False
     )
-    
+
     parser.add_option(
         "-S", "--check-status",
         help="Check the returned status code.",
