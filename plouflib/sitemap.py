@@ -27,7 +27,6 @@ class URLList:
 
 
     def load_from_urls(self, urls):
-        print urls
         self.urls = string.split(urls,',')
 
 
