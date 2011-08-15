@@ -13,7 +13,8 @@ class URLList:
         csv_file = open(filename,'rU')
         url_reader = csv.reader(csv_file)
         for lines in url_reader:
-            self.urls.append(lines[0])
+            if len(lines) > 0:
+                self.urls.append(lines[0])
         csv_file.close()
 
     def load_from_sitemap(self, url):

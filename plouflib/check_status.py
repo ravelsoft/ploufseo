@@ -12,6 +12,6 @@ class StatusCheck:
         if request.status == 301 or request.status == 302:
             subrequest = HTTPRequest(request.location)
             subrequest.get_headers()
-            return [str(request.status), request.comment, str(subrequest.status), subrequest.comment]
+            return [str(request.status), request.location, str(subrequest.status), subrequest.location]
         else :
-            return [str(request.status), request.comment, '', '']
+            return [str(request.status), request.location, '', '']

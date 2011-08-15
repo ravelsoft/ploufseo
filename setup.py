@@ -13,7 +13,7 @@ setup (
     license = 'GPLv3',
     packages=['plouflib'],
     scripts=['bin/ploufseo'],
-    long_description = read('README'),
+    long_description = read('README.md'),
     install_requires=['lxml','BeautifulSoup','progressbar'],
     url='http://www.bitbucket/felixdelval/pyseo',
 )

@@ -54,15 +54,17 @@ class PloufSeo:
                         request.get_content()
                         res_xpath = self.xpath.process(request)
 
-                    if self.options.multiple:
-                        for line in res_xpath:
-                            tmp_line = current_line[:]
-                            tmp_line.extend(list(reversed(line)))
-                            self.output.append(tmp_line)
-                    else:
-                        current_line.extend(res_xpath)
-                        self.output.append(current_line)
+                        if self.options.multiple:
+                            for line in res_xpath:
+                                tmp_line = current_line[:]
+                                tmp_line.extend(list(reversed(line)))
+                                self.output.append(tmp_line)
+                        else:
+                            current_line.extend(res_xpath)
+                            self.output.append(current_line)
 
+                    elif self.options.status_code:
+                        self.output.append(current_line)
             count += 1
             if self.options.progress:
                 progress.update(count)
