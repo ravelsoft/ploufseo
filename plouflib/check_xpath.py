@@ -1,4 +1,7 @@
 import string
+import types
+import sys
+from lxml import etree
 from lxml.html.soupparser import fromstring
 
 class XpathCheck:
@@ -27,7 +30,10 @@ class XpathCheck:
                         if len(value) > max_res:
                             max_res = len(value)
                     else:
-                        res.append(value[0])
+                        if isinstance(value,types.ListType):
+                            res.append(value[0])
+                        else:
+                            res.append(unicode(value))
                 else:
                     if self.options.multiple:                
                         res.append([''])
@@ -35,11 +41,11 @@ class XpathCheck:
                         res.append('')
             except etree.XPathEvalError:
                 res.append('ERROR')
-        
-        if self.options.multiple:
+       
+        if self.options.multiple and isinstance(res,types.ListType):
             for values in res:
                 values.extend(['' for i in range(max_res - len(values))])
             res = self.rotation(res)
-           
+        
         return res
 

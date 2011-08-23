@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import sys
+import logging
 from optparse import OptionParser
 from progressbar import ProgressBar, Bar, Percentage, RotatingMarker, ETA
 
 from plouflib.ploufseo import PloufSeo
 
 widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
+
 
 def make_headers(options):
     headers = ['URL']
@@ -25,29 +27,29 @@ Usage: %prog [options] FILES
 FILES shoud be one or many CSV files containing valid URLs on the first row
 """
     parser = OptionParser()
-    
+
     parser.add_option(
-        "-s","--sitemap",
-        help = 'Get the links from the sitemap.', 
-        dest = "sitemap",
-        metavar = "SITEMAP-URL",
-        default = False
-    )
-    
-    parser.add_option(
-        "-c","--csv",
-        help = 'Get the links form csv files.',
-        dest = "csv",
-        metavar = "CSV-FILES",
-        default = False
+        "-s", "--sitemap",
+        help='Get the links from the sitemap.',
+        dest="sitemap",
+        metavar="SITEMAP-URL",
+        default=False
     )
 
     parser.add_option(
-        "-u","--url",
-        help = "Parse specific URLs",
-        dest = "url",
-        metavar = "URL-LIST",
-        default = False
+        "-c", "--csv",
+        help='Get the links form csv files.',
+        dest="csv",
+        metavar="CSV-FILES",
+        default=False
+    )
+
+    parser.add_option(
+        "-u", "--url",
+        help="Parse specific URLs",
+        dest="url",
+        metavar="URL-LIST",
+        default=False
     )
 
     parser.add_option(
@@ -56,24 +58,41 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         action="store_true", 
         dest="status_code", default=False
     )
-    
+
     parser.add_option(
         "-X", "--check-xpath",
-        help = "Check the XPath expressions, they must be passed as XPATH1,XPATH2,...",
-        dest = "xpath_expression",
+        help=("Check the XPath expressions,"
+                "they must be passed as XPATH1,XPATH2,..."),
+        dest="xpath_expression",
         metavar="XPATH",
         default=False
     )
-    
-    parser.add_option (
-        "-o","--output",
+
+    parser.add_option(
+        "-C", "--checksum",
+        help="Return the SHA1 checksum of the content of the page",
+        action="store_true",
+        dest="checksum",
+        default=False
+    )
+
+    parser.add_option(
+        "-U", "--uniqify",
+        help="Uniqify the list of urls",
+        dest="uniqify",
+        action="store_true",
+        default=False
+    )
+
+    parser.add_option(
+        "-o", "--output",
         help="Overwrite the given csv file",
         dest="output",
         metavar="FILENAME",
         default=False
     )
 
-    parser.add_option (
+    parser.add_option(
         '-p', '--progress',
         help="Show progress bar",
         action="store_true",
@@ -81,18 +100,27 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         default=False
     )
 
-    parser.add_option (
+    parser.add_option(
         '-m', '--multiple',
-        help="Get all the matching value of an XPath expression instead of the first",
+        help=("Get all the matching value of an XPath expression"
+                " instead of the first"),
         action="store_true",
         dest="multiple",
         default=False
     )
 
+    parser.add_option(
+        '--empty-cache',
+        help="Empty the request cache",
+        action="store_true",
+        dest="empty_cache",
+        default=False
+    )
+
     (options, args) = parser.parse_args()
-    
-    #if not (bool(options.csv) or bool(options.sitemap) or bool(options.url)):
-    #    print '--sitemap OR --csv must given'
+
+    #if not (bool(options.csv) and bool(options.sitemap) and bool(options.url)):
+    #    logging.error('You must specify a feed --url --sitemap --csv')
     #    sys.exit()
 
     plouf = PloufSeo(options)
