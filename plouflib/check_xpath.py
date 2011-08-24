@@ -2,13 +2,49 @@ import string
 import types
 import sys
 from lxml import etree
+from lxml.html import HtmlElement
 from lxml.html.soupparser import fromstring
 
-class XpathCheck:
+class XpathResult:
 
-    def rotation(self, array):
-        return zip(*array[::-1])
-             
+    def __init__(self,options):
+        self.options = options
+        self.max_res = 0
+        self.value = []
+
+    def rotate(self):
+        return zip(*self.value[::-1])
+
+    def get(self):
+        if self.options.multiple:
+            for result in self.value:
+                result.extend(['' for i in range(self.max_res - len(result))])
+            return self.rotate()
+        else:
+            res = []
+            for result in self.value:
+                res.append(result[0])
+            return res
+
+
+    def add(self,value):
+        if isinstance(value,types.ListType):
+            if self.max_res < len(value):
+                self.max_res = len(value)
+            self.value.append(map(self.__to_string, value))
+        else:
+            if self.max_res < 1:
+                self.max_res = 1
+            self.value.append([__to_string(value)])
+        
+    def __to_string(self,value):
+        if isinstance(value,HtmlElement):
+            return unicode(etree.tostring(value))
+        else:
+            return unicode(value)
+        
+
+class XpathCheck:
 
     def __init__(self, options):
         self.options = options
@@ -21,31 +57,16 @@ class XpathCheck:
         root = fromstring(request.HTML)
         res = []
         max_res = 0
+        xpath_result = XpathResult(self.options)
         for xpath in self.expressions:
             try:
                 value = root.xpath(xpath)
                 if value:
-                    if self.options.multiple:
-                        res.append(value)
-                        if len(value) > max_res:
-                            max_res = len(value)
-                    else:
-                        if isinstance(value,types.ListType):
-                            res.append(value[0])
-                        else:
-                            res.append(unicode(value))
+                    xpath_result.add(value)
                 else:
-                    if self.options.multiple:                
-                        res.append([''])
-                    else:
-                        res.append('')
+                    xpath_result.add([''])
             except etree.XPathEvalError:
-                res.append('ERROR')
-       
-        if self.options.multiple and isinstance(res,types.ListType):
-            for values in res:
-                values.extend(['' for i in range(max_res - len(values))])
-            res = self.rotation(res)
-        
-        return res
+                res.append(['ERROR'])
+         
+        return xpath_result.get()
 
