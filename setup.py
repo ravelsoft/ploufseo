@@ -13,7 +13,7 @@ setup(
     author_email='felixdelval@gmail.com',
     license='GPLv3',
     packages=['plouflib'],
-    scripts=['bin/ploufseo'],
+    scripts=['bin/ploufseo','bin/antipoux'],
     long_description=read('README.md'),
         install_requires=['lxml', 'BeautifulSoup==3.2.0', 'progressbar'],
     url='http://code.ravelsoft.com/ploufseo',
