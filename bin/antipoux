@@ -1,3 +1,53 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-sed -e 's/<[^>]*>//g' <&0 | sed -e 's/&[^;]*;//g'
+import fileinput
+import re
+import HTMLParser
+import sys
+from optparse import OptionParser
+
+def main():
+    parser = OptionParser()
+    html = HTMLParser.HTMLParser()
+    
+
+    parser.add_option(
+        '--keep-tags',
+        help="Do no suppress the tags",
+        dest="tags",
+        action="store_false",
+        default=True 
+    )
+
+    parser.add_option(
+        '--no-entities-decode',
+        help="Do not decode the entities",
+        dest="decode_entities",
+        action="store_false",
+        default=True
+    )
+
+    parser.add_option(
+        '--keep-entities',
+        help="Do not suppress the entities",
+        dest="entities",
+        action="store_false",
+        default=True
+    )
+
+    (options, args) = parser.parse_args()
+
+    tags = re.compile('<[^>]*>')
+    entities = re.compile('&[^;]*;');
+
+    for line in sys.stdin.readlines():
+        if options.tags:
+            line = tags.sub('',line)
+        if options.decode_entities:
+            line = html.unescape(line.decode('utf-8'))
+        if options.entities:
+            line = entities.sub('',line)
+        print(line)
+
+if __name__ == "__main__":
+    main()
