@@ -10,16 +10,6 @@ from plouflib.ploufseo import PloufSeo
 widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
 
 
-def make_headers(options):
-    headers = ['URL']
-    if options.status_code:
-        headers.extend(StatusCheck.header())
-    if options.xpath_expression:
-        headers.extend(StatusCheck.header())
-
-    return headers
-
-
 def main():
     usage = """
 Usage: %prog [options] FILES
@@ -117,11 +107,24 @@ FILES shoud be one or many CSV files containing valid URLs on the first row
         default=False
     )
 
+    parser.add_option(
+        '-a','--append',
+        help="Append instead of overwriting to the output file",
+        action="store_true",
+        dest="append",
+        default=False
+    )
+
+    parser.add_option(
+        '-n','--no-header',
+        help="Do not write the header of the CSV file",
+        action="store_false",
+        dest="header",
+        default=True
+    )
+
     (options, args) = parser.parse_args()
 
-    #if not (bool(options.csv) and bool(options.sitemap) and bool(options.url)):
-    #    logging.error('You must specify a feed --url --sitemap --csv')
-    #    sys.exit()
 
     plouf = PloufSeo(options)
     plouf.run()

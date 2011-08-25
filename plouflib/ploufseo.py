@@ -101,7 +101,11 @@ class PloufSeo:
             progress.finish()
 
         if self.options.output:
-            output_file = open(self.options.output,'w')
+            if self.options.append:
+                mode = 'a'
+            else:
+                mode = 'w'
+            output_file = open(self.options.output,mode)
         else:
             output_file = sys.stdout
             
