@@ -2,6 +2,7 @@ import csv
 import sys
 import os
 import hashlib
+from progressbar import ProgressBar, Bar, Percentage, RotatingMarker, ETA
 
 from plouflib.http import HTTPRequest
 from plouflib.urllist import URLList
@@ -10,6 +11,8 @@ from plouflib.check_status import StatusCheck
 from plouflib.check_xpath import XpathCheck
 from plouflib.checksum import CheckSum
 from plouflib.unicodecsv import UnicodeWriter
+
+
 
 class PloufSeo:
 
@@ -21,6 +24,7 @@ class PloufSeo:
         self.filters = []
         self.headers = ['URL']
         self.output = []
+        self.widgets = ['Progress: ', Bar(), Percentage(), ' ', ETA()]
         if self.options.status_code:
             self.status = StatusCheck(self.options)
         if self.options.xpath_expression:
@@ -62,8 +66,8 @@ class PloufSeo:
 
         self.__make_headers()
 
-        if self.options.progress:
-            progress = ProgressBar(widgets=widgets,maxval=len(self.url_list.urls)).start()
+        if self.options.progress and len(self.url_list.urls):
+            progress = ProgressBar(widgets=self.widgets,maxval=len(self.url_list.urls)).start()
         
         count = 0
         for url in self.url_list.urls:
@@ -97,7 +101,7 @@ class PloufSeo:
             if self.options.progress:
                 progress.update(count)
 
-        if self.options.progress:
+        if self.options.progress and len(self.url_list.urls):
             progress.finish()
 
         if self.options.output:
