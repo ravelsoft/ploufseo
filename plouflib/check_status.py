@@ -10,7 +10,7 @@ class StatusCheck:
 
     def process(self,request):
         if request.status == 301 or request.status == 302:
-            subrequest = HTTPRequest(request.location)
+            subrequest = HTTPRequest(request.get_location())
             subrequest.get_headers()
             return [str(request.status), request.get_location(), str(subrequest.status), subrequest.get_location()]
         else :

@@ -35,7 +35,7 @@ class XpathResult:
         else:
             if self.max_res < 1:
                 self.max_res = 1
-            self.value.append([__to_string(value)])
+            self.value.append([self.__to_string(value)])
         
     def __to_string(self,value):
         if isinstance(value,HtmlElement):

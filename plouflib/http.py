@@ -31,10 +31,10 @@ class HTTPRequest:
         if not 'location' in self.headers:
             location = '';
         else:
-            if 'http://' in output['location']:
-                location = output['location']
+            if 'http://' in self.headers['location']:
+                location = self.headers['location']
             else:
-                location = urljoin(self.url,output['location'])
+                location = urljoin(self.url,self.headers['location'])
         return location
 
 
