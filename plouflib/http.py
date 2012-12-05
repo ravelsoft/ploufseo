@@ -69,6 +69,8 @@ class HTTPRequest:
                     logging.warning('Error')
                 except urllib2.URLError:
                     logging.warning('No response from server')
+                except:
+                    logging.warning('Unexpected error')
             else:
                 try:
                     self.HTML = open(self.url).read()

@@ -4,7 +4,7 @@ import string
 import logging
 import shelve
 import os
-from urllib2 import urlopen
+from urllib2 import urlopen, HTTPError
 from lxml.html.soupparser import fromstring
 
 class URLList:
@@ -34,6 +34,12 @@ class URLList:
             res = urlopen(url)
         except ValueError:
             logging.warning('Sitemap URL is not valid')
+        except HTTPError, e:
+            logging.error('sitemap: %s' % e)
+            sys.exit(127)
+        except Exception, e:
+            logging.error('Unexpected Error : %s' % e)
+            sys.exit(127)
         content = fromstring(res.read())
         self.urls.extend(content.xpath('//loc/text()'))
 
